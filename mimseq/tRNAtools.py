@@ -226,15 +226,15 @@ def getModomics(local_mod):
 		except HTTPError as http_err:
 			log.error("Unable to connect to Modomics database! HTTP error: {}. Check status of Modomics webpage. Using local Modomics files...".format(http_err))
 			modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
-			modomics = open(modomics_path, "r+", encoding = "utf-8")
+			modomics = open(modomics_path, "r", encoding = "utf-8")
 		except Exception as err:
 			log.error("Error in connecting to Modomics: {}. Using local Modomics files...".format(err))
 			modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
-			modomics = open(modomics_path, "r+", encoding = "utf-8")
+			modomics = open(modomics_path, "r", encoding = "utf-8")
 	else:
 		log.warning("Retrieval of Modomics database disabled. Using local files instead...")
 		modomics_path = os.path.dirname(os.path.realpath(__file__)) + '/data/modomics'
-		modomics = open(modomics_path, "r+", encoding = "utf-8")
+		modomics = open(modomics_path, "r", encoding = "utf-8")
 
 	return modomics, fetch
 
