@@ -23,12 +23,12 @@ RUN apt-get update && apt-get install -y \
 
 # Install conda and give write permissions to conda folder
 RUN echo 'export PATH=/opt2/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
-    wget --quiet "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" -O ~/miniforge3.sh && \
+    wget --quiet "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-pypy3-$(uname)-$(uname -m).sh" -O ~/miniforge3.sh && \
     /bin/bash ~/miniforge3.sh -b -p /opt2/conda && \
     rm ~/miniforge3.sh && chmod 777 -R /opt2/conda/
-
+ENV PATH=$PATH:/opt2/conda/bin
 # install most mimseq deps from conda
-RUN mamba install \
+RUN mamba install -c bioconda -c conda-forge \
     python=3.7 \
     'r-base>=4.1' \
     'biopython>=1.79' \
@@ -57,7 +57,7 @@ RUN mamba install \
     'r-dplyr>=1.0.6' \
     'r-tidyverse>=1.3.0' \
     'r-devtools>=2.4.1' \
-    'r-reshape2>=1.4.4' \
+    'r-reshape2>=1.4.4'
 
 # install usearch
 RUN wget https://drive5.com/downloads/usearch10.0.240_i86linux32.gz && \
