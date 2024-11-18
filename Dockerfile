@@ -1,4 +1,4 @@
-FROM python:3.7.17-bookworm
+FROM ubuntu:22.04
 
 RUN mkdir -p /opt2 && mkdir -p /data2
 ENV TZ=America/New_York
