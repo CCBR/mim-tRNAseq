@@ -4,12 +4,10 @@ Quick-start guide
 Installation
 ^^^^^^^^^^^^
 
-To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time improvements can be made to installing mimseq using mamba which we will use within the mimseq environment:
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time and dependency-related improvements can be made to using conda for managing environment and installing mimseq using the Miniforge_ version of conda which oncludes optional use for Mamba. We recommend installing Miniforge and then following the steps below:
 ::
 	conda create -n mimseq python=3.7
 	conda activate mimseq
-	conda config --add channels conda-forge
-	conda install -c conda-forge mamba
 	mamba install -c bioconda mimseq
 
 usearch needs to be acquired and installed. Please do the following:
@@ -24,13 +22,14 @@ For this last `cp` command, root access is required. However, if this is not pos
 ::
 	export PATH=$PATH:full/path/to/usearch
 
-Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see below) will also need to be installed.
+Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (including `usearch` as above, `BLAST`, `infernal`, `GMAP/GSNAP`, and all required R packages) will also need to be installed.
 ::
 	pip install mimseq
 
 The source code is also available on GitHub_
 
 .. _GitHub: https://github.com/nedialkova-lab/mim-tRNAseq
+.. _Miniforge: https://github.com/conda-forge/miniforge
 
 Once installed, mim-tRNAseq should be executable and help displayed, by running
 ::
@@ -183,7 +182,7 @@ Input files include:
 * Genomic tRNA sequences: DNA sequences of tRNA loci in genome of interest in fasta format, including introns but excluding trailer and leader sequences.
 * tRNA ".out" file: contains important info about tRNA introns.
 * Experiment sample file: User-generated tab-delimited file with 2 columns. The first is the absolute path to trimmed tRNAseq reads. The second is the condition name, used to group replicates (e.g. WT or knock-out etc)
-* OPTIONAL mitochondrial/plastid (in case of plant species) tRNA sequences: Can be obtained from the mitotRNAdb_ if available. First, find the organism of interest in the "Search Database" tab, select all sequences for organism, choose "Send FASTA" in the drop-down at the bottom of the results, and click "Submit". Or, for plant species, obtain sequences from PtRNAdb_ by going to "Search", choosing "Mitochondrial" and/or Plastid" in "Search by Genome", enabling "Search by Plant Name:" and searching for your species of interest. Download the results, and then reformat them to the correct format using the example `convertPtRNAdbSearch.py` script in the *Arabidopsis thaliana* data_ folder, making sure to change the file names in the script before running. Both files can be specified to mim-tRNAseq with the `-m` parameter, separated by a space. Ensure that "mito" and "plastid" are present in the file names!!
+* OPTIONAL mitochondrial and/or plastid (in case of plant species) tRNA sequences: Can be obtained from the mitotRNAdb_ if available. First, find the organism of interest in the "Search Database" tab, select all sequences for organism, choose "Send FASTA" in the drop-down at the bottom of the results, and click "Submit". Or, for plant species, obtain sequences from PtRNAdb_ by going to "Search", choosing "Mitochondrial" and/or Plastid" in "Search by Genome", enabling "Search by Plant Name:" and searching for your species of interest. Download the results, and then reformat them to the correct format using the example `convertPtRNAdbSearch.py` script in the *Arabidopsis thaliana* data_ folder, making sure to change the file names in the script before running. Mitochondrial sequences can be specified to mim-tRNAseq with the `-m` or `--mito-trnas` parameter. Plastid sequences can be specified to mim-tRNAseq with the `-p` or `--plastid-trnas` parameter.
 
 `additionalMods.txt` is automatically read in by mim-tRNAseq to add additional modifications to the modification index that may not be in Modomics yet. Some important modifications have already been added for certain species, mainly based on Clark et al. tRNA base methylation identification and quantification via high-throughput sequencing (2016), and Rafels-Ybern et al. Codon adaptation to tRNAs with Inosine modification at position 34 is widespread among Eukaryotes and present in two Bacterial phyla (2018).
 

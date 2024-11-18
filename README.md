@@ -21,6 +21,7 @@ This package is an automated analysis pipeline for the quantitation and analysis
 * Calculate tRNA differential expression with [DESeq2](https://bioconductor.org/packages/release/bioc/html/DESeq2.html).
 * Analyze functional tRNA pools and tRNA completeness via 3'-CCA analysis
 * Comprehensive modification quantification and misincorporation signature analysis
+* Detect coordination between pairs of modifications and modification-aminoacylation with [SLAC](https://doi.org/10.1093/nar/gkac1185) (SingLe-read Analysis of Crosstalks)
 
 ## Method strategy
 
@@ -35,12 +36,10 @@ Detailed methodology is shown in the image below, and described in Behrens et al
 
 Please see the full documentation for explanations of dependencies, inputs formatting, and outputs.
 
-To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time improvements can be made to installing mimseq using mamba which we will use within the mimseq environment:
+To use mim-tRNAseq, it is recommended to install the package using `conda`, preferably in its own environment. Significant time and dependency-related improvements can be made to using conda for managing environment and installing mimseq using the [Miniforge](https://github.com/conda-forge/miniforge) version of conda which oncludes optional use for Mamba. We recommend installing Miniforge and then following the steps below:
 ```bash
 	conda create -n mimseq python=3.7
 	conda activate mimseq
-	conda config --add channels conda-forge
-	conda install -c conda-forge mamba
 	mamba install -c bioconda mimseq
 ```
 
@@ -57,7 +56,7 @@ For this last cp command, root access is required. However, if this is not possi
 export PATH=$PATH:full/path/to/usearch
 ```
 
-Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (see documentation) will also need to be installed.
+Alternatively, mim-tRNAseq can be installed with `pip`, in which case all additional non-python package dependencies (including `usearch` as above, `BLAST`, `infernal`, `GMAP/GSNAP`, and all required R packages) will also need to be installed manually.
 ```bash
 	pip install mimseq
 ```
@@ -71,6 +70,11 @@ An example command to run mim-tRNAseq may look as follows. This will run an anal
 	mimseq --species Hsap --cluster-id 0.97 --threads 15 --min-cov 0.0005 --max-mismatches 0.075 --control-condition HEK293T -n hg38_test --out-dir hg38_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.05 sampleData_HEKvsK562.txt
 ```
 The run should take around 15 minutes on a server using 15 processors (`--threads 15`: please update according to your server capabilities).
+
+To run the [SingLe-read Analysis of Crosstalks (SLAC)](https://doi.org/10.1093/nar/gkac1185) between tRNA modifications and aminoacylation, specify the optional argument `--crosstalks`. The run can take a few minutes longer depending on the number of processors.
+```bash
+	mimseq --species Hsap --cluster-id 0.97 --threads 15 --min-cov 0.0005 --max-mismatches 0.075 --control-condition HEK293T -n hg38_test --out-dir hg38_HEK239vsK562 --max-multi 4 --remap --remap-mismatches 0.05 --crosstalks sampleData_HEKvsK562.txt
+```
 
 ## Contact
 

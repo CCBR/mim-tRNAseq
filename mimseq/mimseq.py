@@ -18,6 +18,7 @@ from .tRNAtools import modsToSNPIndex, generateGSNAPIndices, newModsParser, tidy
 from .tRNAmap import mainAlign
 from .getCoverage import getCoverage, plotCoverage
 from .mmQuant import generateModsTable, plotCCA
+from .crosstalks import crosstalks_wrapper
 from .ssAlign import structureParser, modContext
 from .splitClusters import splitIsodecoder, unsplitClustersCov, getIsodecoderSizes, getDeconvSizes, writeDeconvTranscripts, writeIsodecoderTranscripts, writeSplitInfo, writeIsodecoderInfo
 import sys, os, subprocess, logging, datetime, copy
@@ -49,7 +50,7 @@ def restrictedFloat2(x):
 		raise argparse.ArgumentTypeError('{} not a real number'.format(x))
 
 def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, posttrans, control_cond, threads, max_multi, snp_tolerance, \
-	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, plastid_trnas, pretrnas, local_mod, p_adj, sample_data):
+	keep_temp, cca, double_cca, min_cov, mismatches, remap, remap_mismatches, misinc_thresh, mito_trnas, plastid_trnas, pretrnas, local_mod, p_adj, crosstalks, sample_data):
 
 # Main wrapper
 	# Integrity check for output folder argument...
@@ -93,12 +94,9 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	########
 
 	map_round = 1 #first round of mapping
-
 	# Parse tRNA and modifications, generate SNP index
-	modifications = os.path.dirname(os.path.realpath(__file__))
-	modifications += "/modifications"
 	coverage_bed, snp_tolerance, mismatch_dict, insert_dict, del_dict, mod_lists, Inosine_lists, Inosine_clusters, tRNA_dict, cluster_dict, cluster_perPos_mismatchMembers \
-	= modsToSNPIndex(trnas, trnaout, mito_trnas, plastid_trnas, modifications, name, out, double_cca, threads, snp_tolerance, cluster, cluster_id, posttrans, pretrnas, local_mod)
+	= modsToSNPIndex(gtRNAdb = trnas, tRNAscan_out = trnaout, mitotRNAs = mito_trnas, plastidtRNAs = plastid_trnas, experiment_name = name, out_dir = out, double_cca = double_cca, threads = threads, snp_tolerance = snp_tolerance, cluster = cluster, cluster_id = cluster_id, posttrans_mod_off = posttrans, pretrnas = pretrnas, local_mod = local_mod)
 	structureParser()
 	# Generate GSNAP indices
 	genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -129,7 +127,7 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 
 	# if remap and snp_tolerance are enabled, skip further analyses, find new mods, and redo alignment and coverage
 	if remap and (snp_tolerance or not mismatches == 0.0):
-		new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+		new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster, crosstalks)
 		Inosine_clusters, snp_tolerance, newtRNA_dict, new_mod_lists, new_inosine_lists = newModsParser(out, name, new_mods, new_Inosines, mod_lists, Inosine_lists, tRNA_dict, cluster, remap, snp_tolerance)
 		map_round = 2
 		genome_index_path, genome_index_name, snp_index_path, snp_index_name = generateGSNAPIndices(species, name, out, map_round, snp_tolerance, cluster)
@@ -152,9 +150,15 @@ def mimseq(trnas, trnaout, name, species, out, cluster, cluster_id, cov_diff, po
 	filtered_cov = list()
 	if snp_tolerance or not mismatches == 0.0:
 		if 'newtRNA_dict' in locals():
-			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup,readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, new_mod_lists, Inosine_lists, newtRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster, crosstalks)
 		else:
-			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup, readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster)
+			new_mods, new_Inosines, filtered_cov, filter_warning, unsplitCluster_lookup, readRef_unsplit_newNames = generateModsTable(coverageData, out, name, threads, min_cov, mismatch_dict, insert_dict, del_dict, cluster_dict, cca, remap, misinc_thresh, mod_lists, Inosine_lists, tRNA_dict, Inosine_clusters, unique_isodecoderMMs_new, splitBool_new, isodecoder_sizes, unsplitCluster_lookup, cluster, crosstalks)
+
+		if crosstalks:
+			# Crosstalks analysis
+			log.info("Analyzing crosstalks between pairs of modifications and modification-charging...")
+			crosstalks_wrapper(out + "single_read_data", misinc_thresh, threads)
+
 	else:
 		log.info("*** Misincorporation analysis not possible; either --snp-tolerance must be enabled, or --max-mismatches must not be 0! ***\n")
 
@@ -226,15 +230,15 @@ def main():
 
 	inputs = parser.add_argument_group("Input files")
 	inputs.add_argument('-s','--species', metavar='species', required = not ('-t' in sys.argv or '--trnas' in sys.argv), dest = 'species', help = \
-		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap19, Mmus, Rnor, Scer, Spom, Dmel, Drer, Ecol, Atha', \
-		choices = ['Hsap', 'Hsap19','Ggor','Mmus','Rnor','Scer', 'Spom','Dmel', 'Drer', 'Ecol', 'Atha', 'HsapTCC', 'ScerMut'])
+		'Species being analyzed for which to load pre-packaged data files (prioritized over -t, -o and -m). Options are: Hsap, Hsap19, Mmus, Rnor, Scer, Spom, Dmel, Drer, Cele, Ecol, Atha', \
+		choices = ['Hsap', 'Hsap19','Ggor','Mmus','Rnor','Scer', 'Spom','Dmel', 'Drer', 'Cele', 'Ecol', 'Atha', 'HsapTCC', 'ScerMut'])
 	inputs.add_argument('-t', '--trnas', metavar='genomic tRNAs', required = False, dest = 'trnas', help = \
 		'Genomic tRNA fasta file, e.g. from gtRNAdb or tRNAscan-SE. Already avalable in data folder for a few model organisms.')
 	inputs.add_argument('-o', '--trnaout', metavar = 'tRNA out file', required = (not '--species' or '-s' in sys.argv) or ('-t' in sys.argv),
 		dest = 'trnaout', help = 'tRNA.out file generated by tRNAscan-SE (also may be available on gtRNAdb). Contains information about tRNA features, including introns.')
-	inputs.add_argument('-m', '--mito-trnas', metavar = 'mitochondrial/plastid tRNAs', required = False, dest = 'mito', \
+	inputs.add_argument('-m', '--mito-trnas', metavar = 'mitochondrial tRNAs', required = False, dest = 'mito', \
 		help = 'Mitochondrial tRNA fasta file(s). Should be downloaded from mitotRNAdb for species of interest. Already available in data folder for a few model organisms.')
-	inputs.add_argument('-p', '--plastid-trnas', metavar = 'mitochondrial/plastid tRNAs', required = False, dest = 'plastid', \
+	inputs.add_argument('-p', '--plastid-trnas', metavar = 'plastid tRNAs', required = False, dest = 'plastid', \
 		help = 'Plastid tRNA fasta file(s). Should be downloaded from PtRNAdb for species of interest. Already available in data folder for a few model organisms.')
 	options = parser.add_argument_group("Program options")
 	options.add_argument('--pretRNAs', required = False, dest = 'pretrnas', action = 'store_true',\
@@ -267,6 +271,8 @@ def main():
 		help = "Adjusted p-value threshold for DESeq2 pairwise condition differential epxression dot plots. \
 			tRNAs with DESeq2 adjusted p-values equal to or below this value will be displayed as green or orange triangles for up- or down-regulated tRNAs, respectively. \
 				Default p-adj <= 0.05")
+	options.add_argument('--crosstalks', required = False, dest = 'crosstalks', action = "store_true",\
+		help = "Enable analysis of crosstalks between pairs of modifications and modification-charging. Full details of this method in: https://doi.org/10.1093/nar/gkac1185")
 
 	align = parser.add_argument_group("GSNAP alignment options")
 	align.add_argument('--max-mismatches', metavar = 'allowed mismatches', required = False, dest = 'mismatches', type = float, \
@@ -350,7 +356,7 @@ def main():
 		else:
 			if args.species:
 				if args.species == 'Ggor':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-tRNAs-filtered2.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-tRNAs-all.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/gorGor4-eColitK/gorGor4-mitotRNAs.fa"
 				if args.species == 'Hsap19':
@@ -358,7 +364,7 @@ def main():
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19_eschColi-tRNAs.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg19-eColitK/hg19-mitotRNAs.fa"
 				if args.species == 'Hsap':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-filtered.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-all.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/hg38-eColitK/hg38-mitotRNAs.fa"
 				if args.species == 'HsapTCC':
@@ -398,17 +404,21 @@ def main():
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/eschColi-K_12_MG1655-tRNAs/eschColi_K_12_MG1655-tRNAs.out"
 					args.mito = ''
 				if args.species == 'Atha':
-					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-tRNAs.fa"
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-tRNAs-all.fa"
 					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-tRNAs-detailed.out"
 					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-mitotRNAs.fa"
 					# plastid reference needed for A.thaliana
-					args.plastid = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-plastidtRNAs.fa "
+					args.plastid = os.path.dirname(os.path.realpath(__file__)) + "/data/araTha1-eColitK/araTha1-plastidtRNAs.fa"
+				if args.species == 'Cele':
+					args.trnas = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-tRNAs-filtered.fa"
+					args.trnaout = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-tRNAs-detailed.out"
+					args.mito = os.path.dirname(os.path.realpath(__file__)) + "/data/ce11-eColitK/ce11-mitotRNAs.fa"
 			else:
 				args.species = args.trnas.split("/")[-1].split(".")[0]
 			mimseq(args.trnas, args.trnaout, args.name, args.species, args.out, args.cluster, args.cluster_id, args.cov_diff, \
 				args.posttrans, args.control_cond, args.threads, args.max_multi, args.snp_tolerance, \
 				args.keep_temp, args.cca, args.double_cca, args.min_cov, args.mismatches, args.remap, args.remap_mismatches, \
-				args.misinc_thresh, args.mito, args.plastid, args.pretrnas, args.local_mod, args.p_adj, args.sampledata)
+				args.misinc_thresh, args.mito, args.plastid, args.pretrnas, args.local_mod, args.p_adj, args.crosstalks, args.sampledata)
 
 if __name__ == '__main__':
 	main()

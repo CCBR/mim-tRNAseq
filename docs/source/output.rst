@@ -47,6 +47,7 @@ Only generated if --cca-analysis flag is present. Contains data and plots for 3'
 * `\*ccaPlot.pdf`: Diverging bar plots indicating average proportions of 3'-CCA, 3'-CC, 3'-C and absent 3' ends for each condition. These proportions are calculated from uniquely aligned reads aligning to the 3' end of the reference transcript. If more than one condition is present in the sample file, there is one of these plots for each pairwise comparison. Otherwise, there is only one plot for the single condition. Percentages and vertical white line indicate average 3'-CCA proportions for the condition.
 * `dinuc_plot`: Proportions of dinucleotide ends for *all* aligned reads for each alignment file.
 * `CCAcounts.csv`: Data file used for plotting diverging bar plots. Counts of different 3' ends for each tRNA/cluster for each bam file.
+* `CCAprops.csv`: Data file generated from `CCAcount.csv` in plotting diverging bar plots. Percentages of each 3' end type within each tRNA/cluster for each bam file.
 * `AlignedDinucProportions.csv`: Data file for plotting dinuc_plot. Counts of dinucleotide ends for each bam file. 
 
 **mods**
@@ -112,4 +113,10 @@ Various files describing the tRNA trascriptome of the genome of interest.
 	* `\*isodecoderInfo.txt`: Isodecoder representative gene with size of isodecoder group (i.e. number of identitical tRNA sequences). Only for cluster-id < 1
 	* `\*clusters.bed`: bed6 file for cluster parents. Only if clustering is enabled.
 	* `\*clusterInfo.txt`: Cluster parent-child relationship for every tRNA gene, with unique cluster number and size. Only if clustering is enabled.
+
+**single_read_data**
+
+Only generated if --crosstalks is specified. The analysis includes all modified sites based on misinc-thresh.
+
+* `*crosstalks.tsv`: Data table for all tRNA crosstalk analyses by `SLAC <https://doi.org/10.1093/nar/gkac1185>`_. Includes tRNA/cluster, pair of crosstalking positions, Fisher exact test p-value, odds ratio, contingency table with read counts, FDR-corrected p-value, and canonical tRNA position information (NAs indicate low-coverage positions). The odds ratio informs whether two modifications/charging tend to appear together in the same read (OR > 1) or tend to be exclusive of one another (OR < 1).
 
