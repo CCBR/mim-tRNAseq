@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
 # Install conda and give write permissions to conda folder
 ENV miniforge_version="23.3.1-1" 
 RUN echo 'export PATH=/opt2/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
-    wget --quiet "https://github.com/conda-forge/miniforge/releases/${miniforge_version}/download/Miniforge3-$(uname)-$(uname -m).sh" -O ~/miniforge3.sh && \
+    wget --quiet "https://github.com/conda-forge/miniforge/releases/download/${miniforge_version}/Miniforge3-$(uname)-$(uname -m).sh" -O ~/miniforge3.sh && \
     /bin/bash ~/miniforge3.sh -b -p /opt2/conda && \
     rm ~/miniforge3.sh && chmod 777 -R /opt2/conda/
 ENV PATH=$PATH:/opt2/conda/bin
