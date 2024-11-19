@@ -1,5 +1,5 @@
 #!/usr/bin/Rscript
-
+options(error = rlang::entrace)
 ## RNA-seq analysis with DESeq2
 ## based on Stephen Turner's script, @genetics_blog
 ## https://gist.github.com/stephenturner/f60c1934405c127f09a6
@@ -52,9 +52,9 @@ for (type in c("cyto", "mito")) {
 
   # Import data from counts and sampleData
   # Filter out mito/cyto counts depending on loop
-  anticodon_countdata = read.table("Anticodon_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
+  anticodon_countdata = read.table("counts/Anticodon_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
   anticodon_countdata$size = NULL
-  isodecoder_countdata = read.table("Isodecoder_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
+  isodecoder_countdata = read.table("counts/Isodecoder_counts_raw.txt", header=TRUE, row.names=1, check.names = FALSE)
   isodecoder_countdata$Single_isodecoder = NULL
   isodecoder_countdata$size = NULL
   isodecoder_countdata$parent = NULL
@@ -84,7 +84,7 @@ for (type in c("cyto", "mito")) {
   anticodon_countdata = as.matrix(anticodon_countdata)
   isodecoder_countdata = as.matrix(isodecoder_countdata)
 
-  isoacceptorFile = list.files(path="./", pattern = "isoacceptorInfo.txt", full.names = T)
+  isoacceptorFile = list.files(path="./annotation/", pattern = "isoacceptorInfo.txt", full.names = T)
   isoacceptorInfo = read.table(isoacceptorFile[1], header = T, row.names = 1)
   isoacceptorInfo = isoacceptorInfo[ , 'size', drop=F]
   isoacceptorInfo$rn = rownames(isoacceptorInfo)
@@ -92,14 +92,14 @@ for (type in c("cyto", "mito")) {
   # cluster_id == 1 means that mim-seq clusters are already representative of isodecoders, therefore get isodecoder info directly from custerInfo
   # cluster_id == '' means clustering is disabled
   if (cluster_id == 1){
-    isodecoderFile = list.files(path="./", pattern = "clusterInfo.txt", full.names = T)
+    isodecoderFile = list.files(path="./annotation/", pattern = "clusterInfo.txt", full.names = T)
     isodecoderInfo = read.table(isodecoderFile[1], header = T)
     isodecoderInfo = isodecoderInfo[!duplicated(isodecoderInfo$parent),]
     isodecoderInfo = isodecoderInfo[, 'cluster_size', drop = F]
     colnames(isodecoderInfo) = 'size'
     isodecoderInfo$rn = rownames(isodecoderInfo)
   } else {
-    isodecoderFile = list.files(path="./", pattern = "isodecoderInfo.txt", full.names = T)
+    isodecoderFile = list.files(path="./annotation/", pattern = "isodecoderInfo.txt", full.names = T)
     isodecoderInfo = read.table(isodecoderFile[1], header = T, row.names = 1)
     isodecoderInfo = isodecoderInfo[ , 'size', drop = F]
     isodecoderInfo$rn = rownames(isodecoderInfo)
