@@ -15,6 +15,9 @@ env:
   image_name: "tranquil_mimseq"
   push: "true"
 
+permissions:
+  contents: read
+
 jobs:
   build-docker:
     runs-on: ubuntu-latest
